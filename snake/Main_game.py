@@ -11,8 +11,8 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480
-FRAMES_PER_SECOND = 5
-N_PIXELS_TO_MOVE = 1
+FRAMES_PER_SECOND = 5 
+
 
 
 # 3 - Inicjalizacja środowiska pygame.
@@ -59,6 +59,7 @@ while True:
         flag = oSnake.flag
     else:
         oFood.randomize_position()
+        FRAMES_PER_SECOND += 0.5
         flag = True
     
     oScore.setValue('Wynik:' + str(oSnake.score))

@@ -14,6 +14,7 @@ class Sanke():
         self.direction = (0,-10)
         self.positions = [(320, 220)]
         self.flag = True
+        
 
     def change_direction(self,direction):
         if direction == 'UP':
@@ -36,6 +37,8 @@ class Sanke():
             self.game_over()
         if new_head[1] <0 or new_head[1] > self.windowHeight:
             self.game_over()
+        if new_head in self.positions[1::]:
+            self.game_over()
             
             
 
@@ -57,6 +60,7 @@ class Sanke():
         self.positions = [(320, 220)]
         self.flag = True
         self.score = 0
+        
     
     def score(self):
         return self.score
