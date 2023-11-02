@@ -16,10 +16,12 @@ class Journals(ttk.Frame):
         self.text_data = text_data
         self.item_number = len(text_data)
         self.list_height = self.item_number*item_height
-        
+        self.item_height = item_height
+
+
         #widets
         menu_buttons_frame = ttk.Frame(self)
-        journal_button_add = ttk.Button(menu_buttons_frame, text = 'Add Journal',command = lambda: self.add_journal('Dziennki_nowy',self.journal_list_frame,text_data,item_height))
+        journal_button_add = ttk.Button(menu_buttons_frame, text = 'Add Journal',command = lambda: self.add_journal(self.journal_list_frame,text_data,item_height))
         journal_button_delete = ttk.Button(menu_buttons_frame, text = 'Delete Journal',command = lambda: self.delete_journal(self.journal_list_frame,text_data,item_height))
 
         menu_buttons_frame.pack(side='top')
@@ -32,20 +34,55 @@ class Journals(ttk.Frame):
         
         self.journal_list_frame = journal_list_frame
 
-    def add_journal(self,text,frame_to_update,text_data,item_height):
-        self.text_data.append(text)
+    def refresh_journals(self,frame_to_update,text_data,item_height):
+        frame_to_update.pack_forget()
+        self.journal_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
+        journals_list = JournalList(self.journal_list_frame,self.text_data,self.item_height).pack(side='top')
+        self.journal_list_frame.pack(side='top',expand=True,fill='both')
+
+    def add_journal(self,frame_to_update,text_data,item_height):
+        new_journal_window = NewJournal(self.journal_name_entered)
+
         frame_to_update.pack_forget()
         self.journal_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
         journals_list = JournalList(self.journal_list_frame,text_data,item_height).pack(side='top')
         self.journal_list_frame.pack(side='top',expand=True,fill='both')
 
-    
+    def journal_name_entered(self, journal_name):
+        self.text_data.append(journal_name)
+        print(journal_name)
+        self.refresh_journals(self.journal_list_frame,self.text_data, self.item_height)
+
     def delete_journal(self,frame_to_update,text_data,item_height):
         self.text_data.pop()
         frame_to_update.pack_forget()
         self.journal_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
         journals_list = JournalList(self.journal_list_frame,text_data,item_height).pack(side='top')
         self.journal_list_frame.pack(side='top',expand=True,fill='both')
+
+class NewJournal(tk.Toplevel):
+    def __init__(self, journal_name_entered):
+        super().__init__()
+        self.title('Nowy dziennik')
+        self.geometry('300x400')
+        self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
+
+        self.journal_name_entered = journal_name_entered
+        self.journal_name = tk.StringVar()
+
+        self.Label = ttk.Label(self,text='Nazwa zadania').pack()
+        self.button_accept = ttk.Button(self,text='Potwierdź',command= self.button_accept_pressed).pack()
+        self.button_resign = ttk.Button(self,text='Zrezygnuj',command=lambda: self.destroy()).pack()
+        self.entry_journal = ttk.Entry(self,textvariable=self.journal_name).pack(expand=True)
+
+        self.focus()
+        self.grab_set()
+
+    def button_accept_pressed(self):
+        self.journal_name_entered(self.journal_name.get())
+        self.destroy()
+
+
 
 class JournalList(ttk.Frame):
     def __init__(self, parent,text_data, item_height):  #text_data,
@@ -141,6 +178,7 @@ class Tasks(ttk.Frame):
 
         self.task_list_frame = task_list_frame
 
+        optimize_button = ttk.Button(self,text = 'Optimize').pack(side='top',anchor='e')
     
     def refresh_tasks(self,frame_to_update,text_data,item_height):
         frame_to_update.pack_forget()
@@ -174,6 +212,7 @@ class NewTask(tk.Toplevel):
         super().__init__()
         self.title('Nowe zadanie')
         self.geometry('300x400')
+        self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
         self.task_name_entered = task_name_entered
         self.task_name = tk.StringVar()
 
