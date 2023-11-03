@@ -1,6 +1,8 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from pathlib import Path
+import json
+
 
 BASE_PATH = str(Path(__file__).resolve().parent)
 
@@ -17,7 +19,7 @@ class Journals(ttk.Frame):
         self.item_number = len(text_data)
         self.list_height = self.item_number*item_height
         self.item_height = item_height
-
+        #self.journal = Journal.name
 
         #widets
         menu_buttons_frame = ttk.Frame(self)
@@ -42,7 +44,7 @@ class Journals(ttk.Frame):
 
     def add_journal(self,frame_to_update,text_data,item_height):
         new_journal_window = NewJournal(self.journal_name_entered)
-
+        
         frame_to_update.pack_forget()
         self.journal_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
         journals_list = JournalList(self.journal_list_frame,text_data,item_height).pack(side='top')
@@ -80,8 +82,9 @@ class NewJournal(tk.Toplevel):
 
     def button_accept_pressed(self):
         self.journal_name_entered(self.journal_name.get())
+        memory_notes[self.journal_name.get()]=[]
+        Memory().save_journal(memory_notes)
         self.destroy()
-
 
 
 class JournalList(ttk.Frame):
@@ -133,20 +136,25 @@ class JournalList(ttk.Frame):
         frame = ttk.Frame(self.frame)
         
         #widgets
-        Journal(frame,f'{item} {index} ')
+        Journal(frame,f'{item}')
 
         return frame 
 
 
-
 class Journal(ttk.Frame):
     def __init__(self,parent,name):
+        global journal_name
         super().__init__(parent)
-
-        ttk.Button(self, text = name).pack(side='top')   
+        self.name = name
+        def selected_journal():
+            journal_name = self.name
+            Tasks().refresh_tasks()
+            App().tasks.refresh_tasks()
+        k = ttk.Button(self, text = name,command= selected_journal).pack(side='top')   
+        journal_name = self.name
 
         self.pack(side='top',expand=True,fill='both',padx=5,pady=5) 
-
+        
 
 class Tasks(ttk.Frame):
     def __init__(self,name,text_data,item_height):
@@ -160,6 +168,7 @@ class Tasks(ttk.Frame):
         self.item_number = len(text_data)
         self.list_height = self.item_number*item_height
         self.item_height = item_height
+
 
         #widgets
         task_menu_buttons_frame = ttk.Frame(self)
@@ -178,7 +187,7 @@ class Tasks(ttk.Frame):
 
         self.task_list_frame = task_list_frame
 
-        optimize_button = ttk.Button(self,text = 'Optimize').pack(side='top',anchor='e')
+        optimize_button = ttk.Button(self,text = 'Optimize').pack(side='bottom',anchor='e')
     
     def refresh_tasks(self,frame_to_update,text_data,item_height):
         frame_to_update.pack_forget()
@@ -226,6 +235,9 @@ class NewTask(tk.Toplevel):
 
     def button_accept_pressed(self):
         self.task_name_entered(self.task_name.get())
+        memory_notes[journal_name].insert(0,self.task_name.get())
+        print(memory_notes)
+        Memory().save_journal(memory_notes)
         self.destroy()
 
 
@@ -293,12 +305,72 @@ class Task(ttk.Frame):
         self.pack(side = 'top', expand=True, fill='both',padx=20,pady =20) 
 
 
+class Memory():
+    def __init__(self):
+        self.notes = {}
+        self.journals = [x for x in self.notes]
+
+    def load_notes(self,journal):
+        try:
+            with open("notes.json","r") as f:
+                self.notes = json.load(f)
+
+            tasks = [self.notes[journal] for x in self.notes]
+            return tasks
+        
+        except FileNotFoundError:
+            pass
+
+    def load_note(self):
+        try:
+            with open("notes.json","r") as f:
+                self.notes = json.load(f)
+                print('zal')
+            for journal, tasks in self.notes.items():
+                self.notes[journal]=tasks
+            return self.notes        
+        except FileNotFoundError:
+            pass
+        
+
+    def save_journal(self,notes):
+        with open("notes.json","w") as f:
+            json.dump(notes,f)
+
+    def delete_note(self,journal):
+        current_journal = journal
+        current_tasks = self.notes[current_journal]
+
+        confirm = messagebox.askyesno("Delete note", f'Are you sure you want to delte {current_tasks}?')
+        if confirm:
+            del self.notes[current_journal]
+
+            with open("notes.json", "w") as f:
+                json.dump(self.notes,f)
+
+    def delete_journal(self,journal):
+        current_journal = journal
+        current_tasks = self.notes[current_journal]
+
+        confirm = messagebox.askyesno("Delete note", f'Are you sure you want to delte {current_tasks}?')
+        if confirm:
+            del self.notes[current_journal]
+
+            with open("notes.json", "w") as f:
+                json.dump(self.notes,f)
+            
+
+
 class App(tk.Tk):
     def __init__(self,title,size):
         super().__init__()
+        global memory_notes
+        memory_notes=Memory().load_note()
+
+        journal_name = None 
 
         #testy_debug
-        journal_list = ['Dziennik1','Dziennik2','Dziennik3','Dziennik4','Dziennik5','Dziennik6','Dziennik7','Dziennik8']
+        # journal_list = ['Dziennik1','Dziennik2','Dziennik3','Dziennik4','Dziennik5','Dziennik6','Dziennik7','Dziennik8']
         task_list = ['Zadanie1','Zadanie2','Zadanie3','Zadanie4','Zadanie5','Zadanie6','Zadanie7','Zadanie8']
 
         self.title("SmartTasker")
@@ -306,17 +378,45 @@ class App(tk.Tk):
         self.minsize(int(size[0]/2),int(size[1]/2))
         self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
 
+
         #widgets
-        self.jounrals = Journals(self,journal_list,100)
-        self.tasks = Tasks(self,task_list,100)
+        self.jounrals = Journals(self,[x for x in memory_notes],100)
+        try:    
+            self.tasks = Tasks(self,memory_notes[journal_name],100)
+        except:
+            self.tasks = Tasks(self,[],100) 
+
+        App().tasks.refresh_tasks()
+
+        
+
+        # try:
+        #     self.tasks = Tasks(self,memory_notes[journal_name],100)
+        # except:
+        #     self.tasks = Tasks(self,[],100)
 
 
         self.mainloop()
 
 
 
+app = App('Class based app',(800,600))
 
 
+#wywoływanie metody klasy w innej klasie 
+# class KlasaB:
+#     def metoda_b(self):
+#         print("Metoda w KlasaB")
 
+# class KlasaA:
+#     def wywolaj_metode_b(self, obiekt_b):
+#         obiekt_b.metoda_b()
 
-App('Class based app',(800,600))
+# # Tworzymy instancję obiektu KlasaB
+# obiekt_b = KlasaB()
+
+# # Tworzymy instancję obiektu KlasaA
+# obiekt_a = KlasaA()
+
+# # Wywołujemy metodę z KlasaA, przekazując obiekt_b jako argument
+# obiekt_a.wywolaj_metode_b(obiekt_b)
