@@ -97,7 +97,7 @@ class JournalList(ttk.Frame):
         self.text_data = text_data
         self.item_number = len(text_data)
         self.list_height = self.item_number*item_height
-
+        
 
         #canvas
         self.canvas = tk.Canvas(self,background='red',bg = 'white',scrollregion=(0,0,self.winfo_width(),self.list_height))
@@ -148,12 +148,14 @@ class Journal(ttk.Frame):
         self.name = name
         def selected_journal():
             journal_name = self.name
-            Tasks().refresh_tasks()
-            App().tasks.refresh_tasks()
-        k = ttk.Button(self, text = name,command= selected_journal).pack(side='top')   
+            print(journal_name)
+            Tasks(self,memory_notes[self.name],100)
+        k = ttk.Button(self, text = name,command= selected_journal).pack(side='top')  
         journal_name = self.name
-
+        
         self.pack(side='top',expand=True,fill='both',padx=5,pady=5) 
+    
+        
         
 
 class Tasks(ttk.Frame):
@@ -162,7 +164,7 @@ class Tasks(ttk.Frame):
 
         self.place(relx=1.0, rely=1.0, anchor='se', relwidth= 0.7, relheight= 1)
         task_label = ttk.Label(self,text = 'Tasks').pack(side='top')
-
+        
         #wdget_data
         self.text_data = text_data
         self.item_number = len(text_data)
@@ -367,8 +369,10 @@ class App(tk.Tk):
         global memory_notes
         memory_notes=Memory().load_note()
 
-        journal_name = None 
-
+        # journal_name = '1231313'
+        # self.selected_journal=journal_name
+        self.jour = [x for x in memory_notes]
+        print(self.jour[1])
         #testy_debug
         # journal_list = ['Dziennik1','Dziennik2','Dziennik3','Dziennik4','Dziennik5','Dziennik6','Dziennik7','Dziennik8']
         task_list = ['Zadanie1','Zadanie2','Zadanie3','Zadanie4','Zadanie5','Zadanie6','Zadanie7','Zadanie8']
@@ -378,45 +382,15 @@ class App(tk.Tk):
         self.minsize(int(size[0]/2),int(size[1]/2))
         self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
 
-
-        #widgets
-        self.jounrals = Journals(self,[x for x in memory_notes],100)
-        try:    
-            self.tasks = Tasks(self,memory_notes[journal_name],100)
-        except:
-            self.tasks = Tasks(self,[],100) 
-
-        App().tasks.refresh_tasks()
-
         
-
-        # try:
-        #     self.tasks = Tasks(self,memory_notes[journal_name],100)
-        # except:
-        #     self.tasks = Tasks(self,[],100)
-
+        #widgets
+        Journals(self,[x for x in memory_notes],100)
 
         self.mainloop()
+
 
 
 
 app = App('Class based app',(800,600))
 
 
-#wywoływanie metody klasy w innej klasie 
-# class KlasaB:
-#     def metoda_b(self):
-#         print("Metoda w KlasaB")
-
-# class KlasaA:
-#     def wywolaj_metode_b(self, obiekt_b):
-#         obiekt_b.metoda_b()
-
-# # Tworzymy instancję obiektu KlasaB
-# obiekt_b = KlasaB()
-
-# # Tworzymy instancję obiektu KlasaA
-# obiekt_a = KlasaA()
-
-# # Wywołujemy metodę z KlasaA, przekazując obiekt_b jako argument
-# obiekt_a.wywolaj_metode_b(obiekt_b)
