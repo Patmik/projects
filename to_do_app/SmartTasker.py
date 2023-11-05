@@ -51,9 +51,13 @@ class Journals(ttk.Frame):
         self.journal_list_frame.pack(side='top',expand=True,fill='both')
 
     def journal_name_entered(self, journal_name):
-        self.text_data.append(journal_name)
-        print(journal_name)
-        self.refresh_journals(self.journal_list_frame,self.text_data, self.item_height)
+        if journal_name in [x for x in memory_notes]:
+            print('dziennik już w slowniku')
+            pass
+        else:
+            self.text_data.append(journal_name)
+            print(journal_name)
+            self.refresh_journals(self.journal_list_frame,self.text_data, self.item_height)
 
     def delete_journal(self,frame_to_update,text_data,item_height):
         self.text_data.pop()
