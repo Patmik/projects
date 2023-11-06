@@ -153,7 +153,7 @@ class Journal(ttk.Frame):
         def selected_journal():
             journal_name = self.name
             print(journal_name)
-            Tasks(self,memory_notes[self.name],100)
+            Tasks(self,memory_notes[self.name],100,self.name)
         k = ttk.Button(self, text = name,command= selected_journal).pack(side='top')  
         journal_name = self.name
         
@@ -163,7 +163,7 @@ class Journal(ttk.Frame):
         
 
 class Tasks(ttk.Frame):
-    def __init__(self,name,text_data,item_height):
+    def __init__(self,name,text_data,item_height,journal):
         super().__init__()
 
         self.place(relx=1.0, rely=1.0, anchor='se', relwidth= 0.7, relheight= 1)
@@ -174,7 +174,7 @@ class Tasks(ttk.Frame):
         self.item_number = len(text_data)
         self.list_height = self.item_number*item_height
         self.item_height = item_height
-
+        self.journal = journal
 
         #widgets
         task_menu_buttons_frame = ttk.Frame(self)
@@ -214,13 +214,18 @@ class Tasks(ttk.Frame):
         print(task_name)
         self.refresh_tasks(self.task_list_frame,self.text_data,self.item_height)
 
+ 
+        
+
     def delete_task(self,frame_to_update,text_data,item_height):
-        self.text_data.pop()
+        new_delete_window = DeleteTaskWindow(text_data,self.journal,self.tasks_name_deleted)
         frame_to_update.pack_forget()
         self.task_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
         tasks_list = TaskList(self.task_list_frame,text_data,item_height).pack(side='top')
-        self.task_list_frame.pack(side='top',expand=True,fill='both')    
+        self.task_list_frame.pack(side='top',expand=True,fill='both')
 
+    def tasks_name_deleted(self,tasks_name):
+        self.refresh_tasks(self.task_list_frame,self.text_data,self.item_height)
 
 class NewTask(tk.Toplevel):
     def __init__(self,task_name_entered):
@@ -245,6 +250,53 @@ class NewTask(tk.Toplevel):
         print(memory_notes)
         Memory().save_journal(memory_notes)
         self.destroy()
+
+class DeleteTaskWindow(tk.Toplevel):
+    def __init__(self,text_data,journal,tasks_name_deleted):
+        super().__init__()
+        self.title('Usuń zadanie')
+        self.geometry('300x400')
+        self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
+        self.text_data = text_data
+        self.Label = ttk.Label(self,text='Nazwa zadania').pack()
+        self.journal = journal
+        self.tasks_name_deleted = tasks_name_deleted
+
+        self.button_accept = ttk.Button(self,text='Potwierdź',command= self.button_accept_pressed).pack()
+        self.button_resign = ttk.Button(self,text='Zrezygnuj',command=lambda: self.destroy()).pack()
+        self.tasks = []
+        self.tasks_to_delete = []
+
+        for index,item in enumerate(self.text_data):
+            task = DeleteTask(self,item)
+            print(task.name)
+            self.tasks.append(task)
+            
+        self.focus()
+        self.grab_set()
+
+
+    def button_accept_pressed(self):
+        for task in self.tasks:
+            if task.check_var.get() == 'off':
+                pass
+            if task.check_var.get() == 'on':
+                self.tasks_to_delete.append(task.name)
+                memory_notes[self.journal].remove(task.name)
+        self.tasks_name_deleted(self.tasks_to_delete)
+        Memory().save_journal(memory_notes)
+        self.destroy()
+
+class DeleteTask(ttk.Frame):
+     def __init__(self,parent,name):
+        super().__init__(parent)
+        self.name = name
+        self.check_var = tk.StringVar()
+        #ttk.Label(self,text = f'{name}').pack(side='left')
+        ttk.Checkbutton(self,text = self.name,command=lambda: print(self.check_var.get()),variable = self.check_var, onvalue= 'on', offvalue ='off').pack(side='left')
+        self.pack(side='top',expand=True,fill='both',padx=5,pady=5)   
+
+        
 
 
 class TaskList(ttk.Frame):
@@ -296,7 +348,7 @@ class TaskList(ttk.Frame):
     def create_item(self,index,item):
         frame = ttk.Frame(self.frame)
 
-        Task(frame,f'{item} {index} ')
+        Task(frame,f'{item}')
 
         return frame 
 
@@ -371,6 +423,7 @@ class App(tk.Tk):
     def __init__(self,title,size):
         super().__init__()
         global memory_notes
+        #global journal_name
         memory_notes=Memory().load_note()
 
         # journal_name = '1231313'
@@ -389,7 +442,7 @@ class App(tk.Tk):
         
         #widgets
         Journals(self,[x for x in memory_notes],100)
-
+        Tasks(self,['WYBIERZ DZIENNIK'],100,'Nazwa dziennika')
         self.mainloop()
 
 
