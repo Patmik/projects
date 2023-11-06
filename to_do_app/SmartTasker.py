@@ -160,8 +160,6 @@ class Journal(ttk.Frame):
         self.pack(side='top',expand=True,fill='both',padx=5,pady=5) 
     
         
-        
-
 class Tasks(ttk.Frame):
     def __init__(self,name,text_data,item_height,journal):
         super().__init__()
@@ -227,6 +225,7 @@ class Tasks(ttk.Frame):
     def tasks_name_deleted(self,tasks_name):
         self.refresh_tasks(self.task_list_frame,self.text_data,self.item_height)
 
+
 class NewTask(tk.Toplevel):
     def __init__(self,task_name_entered):
         super().__init__()
@@ -250,6 +249,7 @@ class NewTask(tk.Toplevel):
         print(memory_notes)
         Memory().save_journal(memory_notes)
         self.destroy()
+
 
 class DeleteTaskWindow(tk.Toplevel):
     def __init__(self,text_data,journal,tasks_name_deleted):
@@ -287,6 +287,7 @@ class DeleteTaskWindow(tk.Toplevel):
         Memory().save_journal(memory_notes)
         self.destroy()
 
+
 class DeleteTask(ttk.Frame):
      def __init__(self,parent,name):
         super().__init__(parent)
@@ -295,9 +296,7 @@ class DeleteTask(ttk.Frame):
         #ttk.Label(self,text = f'{name}').pack(side='left')
         ttk.Checkbutton(self,text = self.name,command=lambda: print(self.check_var.get()),variable = self.check_var, onvalue= 'on', offvalue ='off').pack(side='left')
         self.pack(side='top',expand=True,fill='both',padx=5,pady=5)   
-
         
-
 
 class TaskList(ttk.Frame):
     def __init__(self, parent,text_data, item_height):  #text_data,
