@@ -85,7 +85,7 @@ class NewJournal(tk.Toplevel):
         self.journal_name_entered = journal_name_entered
         self.journal_name = tk.StringVar()
 
-        self.Label = ttk.Label(self,text='Nazwa zadania').pack()
+        self.Label = ttk.Label(self,text='Nazwa dziennika').pack()
         self.button_accept = ttk.Button(self,text='Potwierdź',command= self.button_accept_pressed).pack()
         self.button_resign = ttk.Button(self,text='Zrezygnuj',command=lambda: self.destroy()).pack()
         self.entry_journal = ttk.Entry(self,textvariable=self.journal_name).pack(expand=True)
@@ -264,7 +264,8 @@ class Tasks(ttk.Frame):
 
     def task_name_entered(self,task_name):
         self.text_data.append(task_name)
-        print(task_name)
+        #memory_notes[journal_name].insert(0,task_name)
+        Memory().save_journal(memory_notes)
         self.refresh_tasks(self.task_list_frame,self.text_data,self.item_height)
 
  
@@ -300,9 +301,9 @@ class NewTask(tk.Toplevel):
 
     def button_accept_pressed(self):
         self.task_name_entered(self.task_name.get())
-        memory_notes[journal_name].insert(0,self.task_name.get())
+        #memory_notes[journal_name].insert(0,self.task_name.get())
         print(memory_notes)
-        Memory().save_journal(memory_notes)
+        #Memory().save_journal(memory_notes)
         self.destroy()
 
 
@@ -496,7 +497,7 @@ class App(tk.Tk):
         
         #widgets
         Journals(self,[x for x in memory_notes],100)
-        Tasks(self,['WYBIERZ DZIENNIK'],100,'Nazwa dziennika')
+        
         self.mainloop()
 
 
