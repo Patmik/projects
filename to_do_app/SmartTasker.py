@@ -60,12 +60,21 @@ class Journals(ttk.Frame):
             self.refresh_journals(self.journal_list_frame,self.text_data, self.item_height)
 
     def delete_journal(self,frame_to_update,text_data,item_height):
-        self.text_data.pop()
+        new_delete_journal_window = DeleteJournalWindow(text_data,self.journal_name_deleted)
+        
         frame_to_update.pack_forget()
         self.journal_list_frame = ttk.Frame(self,borderwidth=10, relief=tk.RIDGE)
         journals_list = JournalList(self.journal_list_frame,text_data,item_height).pack(side='top')
         self.journal_list_frame.pack(side='top',expand=True,fill='both')
+    
+    def journal_name_deleted(self,journals_name):
 
+        for journal in journals_name:
+            print(self.text_data, journal)
+            self.text_data.remove(journal)
+        self.refresh_journals(self.journal_list_frame,self.text_data, self.item_height)
+        
+    
 class NewJournal(tk.Toplevel):
     def __init__(self, journal_name_entered):
         super().__init__()
@@ -89,6 +98,52 @@ class NewJournal(tk.Toplevel):
         memory_notes[self.journal_name.get()]=[]
         Memory().save_journal(memory_notes)
         self.destroy()
+
+class DeleteJournalWindow(tk.Toplevel):
+    def __init__(self,text_data,journal_name_deleted):
+        super().__init__()
+        self.title('Usuń dziennik')
+        self.geometry('300x400')
+        self.iconbitmap(BASE_PATH  + '/brain_notes.ico')
+        self.text_data = text_data
+        self.Label = ttk.Label(self,text='Nazwa dziennika').pack()
+        self.journal_name_deleted = journal_name_deleted
+
+        self.button_accept = ttk.Button(self,text='Potwierdź',command= self.button_accept_pressed).pack()
+        self.button_resign = ttk.Button(self,text='Zrezygnuj',command=lambda: self.destroy()).pack()
+        self.journals = []
+        self.journals_to_delete = []
+
+        for index,item in enumerate(self.text_data):
+            journal = DeleteJournal(self,item)
+            self.journals.append(journal)
+            
+        self.focus()
+        self.grab_set()
+
+
+    def button_accept_pressed(self):
+        for journal in self.journals:
+            if journal.check_var.get() == 'off':
+                pass
+            if journal.check_var.get() == 'on':
+                self.journals_to_delete.append(journal.name)
+                print(journal.name)
+                del memory_notes[journal.name]
+        self.journal_name_deleted(self.journals_to_delete)
+        Memory().save_journal(memory_notes)
+        self.destroy()
+
+
+class DeleteJournal(ttk.Frame):
+     def __init__(self,parent,name):
+        super().__init__(parent)
+        self.name = name
+        self.check_var = tk.StringVar()
+        #ttk.Label(self,text = f'{name}').pack(side='left')
+        ttk.Checkbutton(self,text = self.name,command=lambda: print(self.check_var.get()),variable = self.check_var, onvalue= 'on', offvalue ='off').pack(side='left')
+        self.pack(side='top',expand=True,fill='both',padx=5,pady=5)   
+
 
 
 class JournalList(ttk.Frame):
@@ -428,7 +483,7 @@ class App(tk.Tk):
         # journal_name = '1231313'
         # self.selected_journal=journal_name
         self.jour = [x for x in memory_notes]
-        print(self.jour[1])
+        
         #testy_debug
         # journal_list = ['Dziennik1','Dziennik2','Dziennik3','Dziennik4','Dziennik5','Dziennik6','Dziennik7','Dziennik8']
         task_list = ['Zadanie1','Zadanie2','Zadanie3','Zadanie4','Zadanie5','Zadanie6','Zadanie7','Zadanie8']
